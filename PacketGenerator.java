@@ -70,8 +70,7 @@ class PacketGenerator {
       return getDataPacket();
   }
   public Packet getConfigPacket() {
-    if( (numConfigPackets & 1) > 0 )
-      lastConfigAddress = pairGen.getPair().source;
+    lastConfigAddress = pairGen.getPair().source;
     int addressBegin = uniGen.getRand(addressesMask-configAddressMask);
     return new Packet(new Config(lastConfigAddress, uniGen.getUnitRand() < pngFraction, 
       uniGen.getUnitRand() < acceptingFraction, addressBegin, 
@@ -163,8 +162,8 @@ class AddressPairGenerator {
       dest = ( dest + mask ) & mask; // he's walking backward...
       destResidue = destResidue - 1.0d;
     }
-    return new AddressPair(uniGen.mangle(1+((source+expGen.getRand()) & mask)),
-                          uniGen.mangle(1+((dest+expGen.getRand()) & mask)));
+    return new AddressPair(uniGen.mangle(1+((source+expGen.getRand())))& mask,
+                          uniGen.mangle(1+((dest+expGen.getRand())))& mask);
   }
 }
 

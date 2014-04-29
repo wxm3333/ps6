@@ -3,6 +3,9 @@ import java.util.zip.Checksum;
 import java.lang.Object;
 import java.lang.Math;
 
+// test app to demonstrate how work is distributed between uniform and 
+// exponential packets
+
 class UniformGenerator {
   RandomGenerator randGen;
   public UniformGenerator(int seed) {
