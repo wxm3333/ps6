@@ -6,6 +6,7 @@ JC=javac
 
 CLASSES = \
 	PaddedPrimitive.java \
+	SkipList.java\
 	StopWatch.java \
 	Fingerprint.java \
 	RandomGenerator.java \
@@ -14,7 +15,9 @@ CLASSES = \
 	PacketWorker.java \
 	SerialFirewall.java\
 	Dispatcher.java\
-	STMFirewall.java\
+	ParallelFirewall.java\
+	AwesomeParallelFirewall.java\
+	ParallelDispatcher.java\
 
 default: classes
 

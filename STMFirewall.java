@@ -15,8 +15,6 @@ class STMFirewall{
     final double acceptingFraction = Float.parseFloat(args[10]);
     final int maxQueueSize = 256;
 
-
-    @SuppressWarnings({"unchecked"})
     StopWatch timer = new StopWatch();
     PacketGenerator source = new PacketGenerator(numAddressLog,
                                                   numTrainsLog,

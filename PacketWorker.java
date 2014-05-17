@@ -1,5 +1,9 @@
 import java.util.*;
-import org.deuce.Atomic;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.locks.ReadWriteLock;
+
 
 public interface PacketWorker<T> extends Runnable {
   public void run();
@@ -151,7 +155,7 @@ class STMPacketWorker implements PacketWorker {
     }
   }
 
-  @Atomic
+
   private void processConfig(Packet pkt){
 	    totalPackets++;
 	    Config config = pkt.config;
@@ -204,4 +208,258 @@ class STMPacketWorker implements PacketWorker {
 	  }
 }
 
+class ParallelPacketWorker implements PacketWorker {
+	  PaddedPrimitiveNonVolatile<Boolean> done;
+	  ConcurrentHashMap<Integer, ConcurrentSkipListSet<Integer>> rTable;
+	  ConcurrentHashMap<Integer, Boolean> pngTable;
+	  ConcurrentHashMap<Long, Integer> histogram;
+	  long totalPackets = 0;
+	  WaitFreeQueue<Packet>[] queues;
+	  Fingerprint fingerprint;
+	  ReadWriteLock tableLock;
+	  public ParallelPacketWorker(
+	    PaddedPrimitiveNonVolatile<Boolean> done,
+	    WaitFreeQueue<Packet>[] queues,
+	    ConcurrentHashMap<Integer, ConcurrentSkipListSet<Integer>> rTable,
+	    ConcurrentHashMap<Integer, Boolean> pngTable,
+	    ConcurrentHashMap<Long, Integer> histogram,
+	    ReadWriteLock tableLock) {
+	    this.done = done;
+	    this.rTable = rTable;
+	    this.pngTable = pngTable;
+	    this.histogram = histogram;
+	    this.queues = queues;
+	    fingerprint = new Fingerprint();
+	    this.tableLock = tableLock;
+	  }
+	  
+	  public void run() {
+		Random rand = new Random();
+	    Packet tmp = null;
+	    int i = rand.nextInt(queues.length);
+	    boolean locked = false;
+	    while(!done.value || tmp != null) {
 
+	      try {
+	    	if (!locked){
+	    		while (!queues[i].lock.tryLock()){
+	    			i = rand.nextInt(queues.length);
+	    		}
+	    		locked = true;
+	    	}
+	        tmp = this.queues[i].deq();
+
+	      } catch (EmptyException e) {
+	        tmp = null;
+	        queues[i].lock.unlock();
+			locked=false;
+			i = rand.nextInt(queues.length);
+
+	        }
+	      if(tmp != null){
+	        
+	        switch(tmp.type) {
+	          case ConfigPacket: 
+	        	tableLock.writeLock().lock();
+	            processConfig(tmp);
+	            tableLock.writeLock().unlock();
+	            break;
+	          case DataPacket:
+	        	tableLock.readLock().lock();
+	            processData(tmp);
+	            tableLock.readLock().unlock();
+	            break;
+	          default:
+	            System.out.println("ERR: Packet has no type");
+	            break;
+	        }
+	      }
+	      else{
+	      }
+	      
+	    }
+	  }
+
+	  private void processConfig(Packet pkt){
+		    totalPackets++;
+		    Config config = pkt.config;
+		    int address = config.address;
+		    pngTable.put( new Integer(address), new Boolean(config.personaNonGrata));
+		    ConcurrentSkipListSet<Integer> permissions = rTable.get(new Integer(address));
+		    if(permissions == null){
+		      permissions = new ConcurrentSkipListSet<Integer>();
+		    
+		    }
+		    for (int i = config.addressBegin; i < config.addressEnd; i++){
+		    	if (config.acceptingRange) {
+		    		permissions.add(new Integer(i));
+		    	}
+		    	else {
+		    		permissions.remove(new Integer(i));
+		    	}
+		      
+		    }
+		    rTable.put(new Integer(address), permissions);
+		  
+		  }
+
+		  private void processData(Packet pkt){
+			  
+		      totalPackets++;
+		      Header header = pkt.header;
+		      if (pngTable.get(header.source) == null || pngTable.get(header.source)){
+		          return;
+		      }
+		      ConcurrentSkipListSet<Integer> permissions = rTable.get(new Integer(header.dest));
+		      if(permissions == null) { 
+		          //System.out.println("no permission table");
+		      }else{
+		        Boolean accept = permissions.contains(header.source);
+		        
+		        if(!accept){
+		            //System.out.println("accept==false");
+		            return;
+		          }
+		        }
+		      
+
+		      long f = fingerprint.getFingerprint(pkt.body.iterations,pkt.body.seed);
+		      int count = 0;
+		      Integer c = histogram.get(f);
+		      if (c != null){
+		        count = c;
+		      }
+		      count += 1;
+		      histogram.put(f, count);
+		  }
+	}
+
+class AwesomeParallelPacketWorker implements PacketWorker {
+	  PaddedPrimitiveNonVolatile<Boolean> done;
+	  ConcurrentHashMap<Integer, SkipList> rTable;
+	  ConcurrentHashMap<Integer, Boolean> pngTable;
+	  ConcurrentHashMap<Long, Integer> histogram;
+	  long totalPackets = 0;
+	  WaitFreeQueue<Packet>[] queues;
+	  Fingerprint fingerprint;
+	  ReadWriteLock tableLock;
+	  public AwesomeParallelPacketWorker(
+	    PaddedPrimitiveNonVolatile<Boolean> done,
+	    WaitFreeQueue<Packet>[] queues,
+	    ConcurrentHashMap<Integer, SkipList> rTable,
+	    ConcurrentHashMap<Integer, Boolean> pngTable,
+	    ConcurrentHashMap<Long, Integer> histogram,
+	    ReadWriteLock tableLock) {
+	    this.done = done;
+	    this.rTable = rTable;
+	    this.pngTable = pngTable;
+	    this.histogram = histogram;
+	    this.queues = queues;
+	    fingerprint = new Fingerprint();
+	    this.tableLock = tableLock;
+	  }
+	  
+	  public void run() {
+		Random rand = new Random();
+	    Packet tmp = null;
+	    int i = rand.nextInt(queues.length);
+	    boolean locked = false;
+	    while(!done.value || tmp != null) {
+
+	      try {
+	    	if (!locked){
+	    		while (!queues[i].lock.tryLock()){
+	    			i = rand.nextInt(queues.length);
+	    		}
+	    		locked = true;
+	    	}
+	        tmp = this.queues[i].deq();
+
+	      } catch (EmptyException e) {
+	        tmp = null;
+	        queues[i].lock.unlock();
+			locked=false;
+			i = rand.nextInt(queues.length);
+
+	        }
+	      if(tmp != null){
+	        
+	        switch(tmp.type) {
+	          case ConfigPacket: 
+	        	tableLock.writeLock().lock();
+	            processConfig(tmp);
+	            tableLock.writeLock().unlock();
+	            break;
+	          case DataPacket:
+	        	tableLock.readLock().lock();
+	            processData(tmp);
+	            tableLock.readLock().unlock();
+	            break;
+	          default:
+	            System.out.println("ERR: Packet has no type");
+	            break;
+	        }
+	      }
+	      else{
+	      }
+	      
+	    }
+	  }
+
+	  private void processConfig(Packet pkt){
+		    totalPackets++;
+		    Config config = pkt.config;
+		    int address = config.address;
+		    pngTable.put( new Integer(address), new Boolean(config.personaNonGrata));
+		    SkipList permissions = rTable.get(new Integer(address));
+		    if(permissions == null){
+		    	if (config.acceptingRange) {
+		    		permissions = new SkipList(config.addressBegin, config.addressEnd, true);
+		    	}
+		    	else {
+		    		permissions = new SkipList(config.addressBegin, config.addressEnd, false);
+		    	}
+		    
+		    }
+		    else {
+		    	if (config.acceptingRange) {
+		    		permissions.add(config.addressBegin, config.addressEnd);
+		    	}
+		    	else {
+		    		permissions.subtract(config.addressBegin, config.addressEnd);
+		    	}
+		    }
+
+		    rTable.put(new Integer(address), permissions);
+		  
+		  }
+
+		  private void processData(Packet pkt){
+			  
+		      totalPackets++;
+		      Header header = pkt.header;
+		      if (pngTable.get(header.source) == null || pngTable.get(header.source)){
+		          return;
+		      }
+		      SkipList permissions = rTable.get(new Integer(header.dest));
+		      if(permissions == null) { 
+		          //System.out.println("no permission table");
+		      }else{
+		        Boolean accept = permissions.contains(header.source);
+		        if(!accept){
+		            //System.out.println("accept==false");
+		            return;
+		          }
+		        }
+		      
+
+		      long f = fingerprint.getFingerprint(pkt.body.iterations,pkt.body.seed);
+		      int count = 0;
+		      Integer c = histogram.get(f);
+		      if (c != null){
+		        count = c;
+		      }
+		      count += 1;
+		      histogram.put(f, count);
+		  }
+	}
