@@ -39,6 +39,9 @@ class SerialFirewall{
 	    final double pngFraction=Double.parseDouble(args[8]);
 	    final double acceptingFraction=Double.parseDouble(args[9]);
 	    final int numMilliseconds = Integer.parseInt(args[10]);
+		//System.out.println("addresslog: "+numAddressLog);
+		//System.out.println("meanwork: "+meanWork);
+		//System.out.println("acceptingFraction: "+acceptingFraction);
 
     StopWatch timer = new StopWatch();
     PacketGenerator source = new PacketGenerator(numAddressLog,
