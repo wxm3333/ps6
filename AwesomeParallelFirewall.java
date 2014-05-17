@@ -34,7 +34,7 @@ public class AwesomeParallelFirewall {
 				args=new String[]{"16","14","15","12","9","5","8840","0.04","0.19","0.76","2000",args[1]};
 			}
 		}
-		final int numAddressLog = Integer.parseInt(args[1]);
+		final int numAddressLog = Integer.parseInt(args[0]);
 		final int numTrainsLog=Integer.parseInt(args[1]);
 	    final double meanTrainSize=Double.parseDouble(args[2]);
 	    final double meanTrainsPerComm=Double.parseDouble(args[3]);

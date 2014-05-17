@@ -1,0 +1,1 @@
+COMMAND: numactl --cpunodebind=0,1 java ParallelFirewall 3 16
