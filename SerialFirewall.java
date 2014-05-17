@@ -62,7 +62,7 @@ class SerialFirewall{
     Hashtable<Long, Integer>  histogram = new Hashtable<Long, Integer> ();
     SerialPacketWorker workerData = new SerialPacketWorker(done, source, rTable, pngTable, histogram);
     Thread workerThread = new Thread(workerData);
-    for(int j = 0; j < (1 <<(int)(numAddressLog * 1.5)); j++){
+    for(int j = 0; j < (1 <<(int)(Math.min(numAddressLog, 12)*1.5)); j++){
       Packet pkt = source.getConfigPacket();
       Config config = pkt.config;
       int address = config.address;

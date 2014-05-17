@@ -19,12 +19,12 @@ if __name__ == '__main__':
   bin = "java"
 
   print 'set n Awesomeparallel'
-  ns = [2, 4, 8, 16, 32]
+  ns = [16, 32]
 
-  for s in range(1, 5):
+  for s in range(7, 9):
     for n in ns:
       cnts_p = []
       for j in range(3):
         raw = check_output([bin, 'AwesomeParallelFirewall', str(s), str(n)])
         cnts_p.append(get_cnt(raw))
-      print s, n, average(cnts_p)
+      print s, n, 0, average(cnts_p)

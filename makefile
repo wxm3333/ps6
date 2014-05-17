@@ -15,9 +15,8 @@ CLASSES = \
 	PacketWorker.java \
 	SerialFirewall.java\
 	Dispatcher.java\
-	ParallelFirewall.java\
-	AwesomeParallelFirewall.java\
 	ParallelDispatcher.java\
+	AwesomeParallelFirewall.java\
 
 default: classes
 
