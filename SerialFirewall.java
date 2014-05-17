@@ -1,18 +1,44 @@
 import java.util.*;
 class SerialFirewall{
   public static void main(String[] args) {
-
-    final int numMilliseconds = Integer.parseInt(args[0]);    
-    final int numAddressLog = Integer.parseInt(args[1]);    
-    final int numTrainsLog = Integer.parseInt(args[2]);    
-    final double meanTrainSize = Float.parseFloat(args[3]);    
-    final double meanTrainsPerComm = Float.parseFloat(args[4]);  
-    final int meanWindow = Integer.parseInt(args[5]);    
-    final int meanCommsPerAddress = Integer.parseInt(args[6]);
-    final int meanWork = Integer.parseInt(args[7]);    
-    final double configFraction = Float.parseFloat(args[8]);    
-    final double pngFraction = Float.parseFloat(args[9]);    
-    final double acceptingFraction = Float.parseFloat(args[10]);
+		if (args.length==2){
+			System.out.println(args[0]+" "+args[1]);
+			if (args[0].equals("1")){
+				args=new String[]{"11","12","5","1","3","3","3822","0.24","0.04","0.96","2000",args[1]};
+			}
+			else if(args[0].equals("2")){
+				args=new String[]{"12","10","1","3","3","1","2644","0.11","0.09","0.92","2000",args[1]};
+			}
+			else if(args[0].equals("3")){
+				args=new String[]{"12","10","4","3","6","2","1304","0.10","0.03","0.90","2000",args[1]};
+			}
+			else if(args[0].equals("4")){
+				args=new String[]{"14","10","5","5","6","2","315","0.08","0.05","0.90","2000",args[1]};
+			}
+			else if(args[0].equals("5")){
+				args=new String[]{"15","14","9","16","7","10","4007","0.02","0.10","0.84","2000",args[1]};
+			}
+			else if(args[0].equals("6")){
+				args=new String[]{"15","14","9","10","9","9","7125","0.01","0.20","0.77","2000",args[1]};
+			}
+			else if(args[0].equals("7")){
+				args=new String[]{"15","15","10","13","8","10","5328","0.04","0.18","0.80","2000",args[1]};
+			}
+			else if(args[0].equals("8")){
+				args=new String[]{"16","14","15","12","9","5","8840","0.04","0.19","0.76","2000",args[1]};
+			}
+		}
+		final int numAddressLog = Integer.parseInt(args[0]);
+		final int numTrainsLog=Integer.parseInt(args[1]);
+	    final double meanTrainSize=Double.parseDouble(args[2]);
+	    final double meanTrainsPerComm=Double.parseDouble(args[3]);
+	    final int meanWindow=Integer.parseInt(args[4]);
+	    final int meanCommsPerAddress=Integer.parseInt(args[5]);
+	    final int meanWork=Integer.parseInt(args[6]);
+	    final double configFraction=Double.parseDouble(args[7]);
+	    final double pngFraction=Double.parseDouble(args[8]);
+	    final double acceptingFraction=Double.parseDouble(args[9]);
+	    final int numMilliseconds = Integer.parseInt(args[10]);
 
     StopWatch timer = new StopWatch();
     PacketGenerator source = new PacketGenerator(numAddressLog,
